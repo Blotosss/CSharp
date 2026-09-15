@@ -4,6 +4,6 @@ class Proram
 {
     public static void Main()
     {
-        Task7.Run();
+        Task8.Run();
     }
 }
