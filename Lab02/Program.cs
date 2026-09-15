@@ -1,1 +1,9 @@
-﻿Console.WriteLine("Hello, World!");
+﻿using Lab02;
+
+class Proram
+{
+    public static void Main()
+    {
+        Task1.Run();
+    }
+}
