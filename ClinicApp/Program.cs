@@ -4,31 +4,26 @@ class Program
 {
     static void Main(string[] args)
     {
-        PatientManager patientManager = new PatientManager();
-        patientManager.Add(new Patient("Іван", "Петренко", new DateTime(1990, 5, 15), "A(I)+", "0501234567"));
-        patientManager.Add(new Patient("Олена", "Коваль", new DateTime(1985, 8, 20), "B(III)+", "0672345678"));
-        patientManager.Add(new Patient("Максим", "Бойко", new DateTime(2000, 1, 10), "O(I)-", "0933456789"));
+        Clinic clinic = new Clinic("Медична Клініка");
 
-        DoctorManager doctorManager = new DoctorManager();
-        doctorManager.Add(new Doctor("Олег", "Сидоренко", "Кардіологія", "LIC-001", "0441234567"));
-        doctorManager.Add(new Doctor("Наталія", "Мороз", "Неврологія", "LIC-002", "0442345678"));
-        doctorManager.Add(new Doctor("Андрій", "Власенко", "Педіатрія", "LIC-003", "0443456789"));
+        clinic.Patients.Add(new Patient("Іван", "Петренко", new DateTime(1990, 5, 15), "A(I)+", "0501234567"));
+        clinic.Patients.Add(new Patient("Олена", "Коваль", new DateTime(1985, 8, 20), "B(III)+", "0672345678"));
+        clinic.Patients.Add(new Patient("Максим", "Бойко", new DateTime(2000, 1, 10), "O(I)-", "0933456789"));
 
-        AppointmentManager appointmentManager = new AppointmentManager(patientManager, doctorManager);
+        clinic.Doctors.Add(new Doctor("Олег", "Сидоренко", "Кардіологія", "LIC-001", "0441234567"));
+        clinic.Doctors.Add(new Doctor("Наталія", "Мороз", "Неврологія", "LIC-002", "0442345678"));
+        clinic.Doctors.Add(new Doctor("Андрій", "Власенко", "Педіатрія", "LIC-003", "0443456789"));
 
-        DateTime baseDate = DateTime.Now.AddDays(1);
-        appointmentManager.Book(1, 1, baseDate.AddHours(10), 30);
-        appointmentManager.Book(99, 1, baseDate.AddHours(10), 30);
-        appointmentManager.Book(2, 2, baseDate.AddHours(11), 45);
-        appointmentManager.Book(3, 3, baseDate.AddDays(1).AddHours(9), 20);
+        DateTime targetDate = DateTime.Today.AddDays(1);
 
-        Console.WriteLine("\nМайбутні записи:");
-        appointmentManager.DisplayList(appointmentManager.GetUpcoming());
+        clinic.Appointments.Book(1, 1, targetDate.AddHours(10), 30);
+        clinic.Appointments.Book(2, 2, targetDate.AddHours(11), 45);
+        clinic.Appointments.Book(3, 3, targetDate.AddHours(12), 20);
 
         Console.WriteLine();
-        appointmentManager.Cancel(1);
+        clinic.DisplaySchedule(targetDate);
 
-        Console.WriteLine("\nЗаписи пацієнта #2:");
-        appointmentManager.DisplayList(appointmentManager.GetByPatient(2));
+        Console.WriteLine();
+        clinic.GenerateReport();
     }
 }
