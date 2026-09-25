@@ -4,22 +4,28 @@ class Program
 {
     static void Main(string[] args)
     {
-        RunPatientMenu();
+        RunDoctorMenu();
     }
 
-    static void RunPatientMenu()
+    static void RunDoctorMenu()
     {
-        PatientManager manager = new PatientManager();
+        DoctorManager manager = new DoctorManager();
 
-        Console.WriteLine("=== Додавання пацієнтів ===");
-        manager.Add(new Patient("Іван", "Петренко", new DateTime(1983, 5, 15), "A+", "0501234567"));
-        manager.Add(new Patient("Олена", "Коваль", new DateTime(1991, 11, 20), "B-", "0672345678"));
-        manager.Add(new Patient("Максим", "Бойко", new DateTime(2008, 3, 10), "0+", "0933456789"));
-        manager.Add(new Patient("Марія", "Ткач", new DateTime(1998, 7, 25), "0+", "0000000000"));
+        Doctor d1 = new Doctor("Олег", "Сидоренко", "Кардіологія", "LIC-001", "0441234567");
+        d1.WorkStartHour = 8;
+        d1.WorkEndHour = 16;
 
-        Console.WriteLine();
+        Doctor d2 = new Doctor("Наталія", "Мороз", "Неврологія", "LIC-002", "0442345678");
+        d2.WorkStartHour = 9;
+        d2.WorkEndHour = 18;
+
+        Doctor d3 = new Doctor("Андрій", "Власенко", "Педіатрія", "LIC-003", "0443456789");
+
+        manager.Add(d1);
+        manager.Add(d2);
+        manager.Add(d3);
+
         manager.DisplayAll();
-
         Console.WriteLine();
         manager.DisplayStats();
     }
