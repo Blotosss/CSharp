@@ -1,4 +1,4 @@
-﻿namespace ClinicApp;
+namespace ClinicApp;
 
 public class PatientManager
 {
@@ -7,6 +7,15 @@ public class PatientManager
     private int _count = 0;
 
     public int Count => _count;
+
+    public Patient? this[int index]
+    {
+        get
+        {
+            if (index < 0 || index >= _count) return null;
+            return _patients[index];
+        }
+    }
 
     public void Add(Patient patient)
     {
@@ -31,6 +40,36 @@ public class PatientManager
             }
         }
         return null;
+    }
+
+    public bool TryFindById(int id, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out Patient? patient)
+    {
+        patient = FindById(id);
+        return patient != null;
+    }
+
+    public Patient[] FindByBloodType(BloodType bloodType)
+    {
+        int matchCount = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_patients[i].BloodType == bloodType)
+            {
+                matchCount++;
+            }
+        }
+
+        Patient[] result = new Patient[matchCount];
+        int index = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_patients[i].BloodType == bloodType)
+            {
+                result[index++] = _patients[i];
+            }
+        }
+
+        return result;
     }
 
     public Patient[] FindByName(string query)

@@ -1,4 +1,4 @@
-﻿namespace ClinicApp;
+namespace ClinicApp;
 
 public class DoctorManager
 {
@@ -7,6 +7,15 @@ public class DoctorManager
     private int _count = 0;
 
     public int Count => _count;
+
+    public Doctor? this[int index]
+    {
+        get
+        {
+            if (index < 0 || index >= _count) return null;
+            return _doctors[index];
+        }
+    }
 
     public void Add(Doctor doctor)
     {
@@ -32,14 +41,22 @@ public class DoctorManager
         return null;
     }
 
-    public Doctor[] FindBySpeciality(string speciality)
+    public bool TryFindById(int id, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out Doctor? doctor)
     {
-        string spec = speciality.ToLower();
+        doctor = FindById(id);
+        return doctor != null;
+    }
+
+    public Doctor[] FindBySpeciality(string query)
+    {
+        string q = query.ToLower();
         int matchCount = 0;
 
         for (int i = 0; i < _count; i++)
         {
-            if (_doctors[i].Speciality.ToLower() == spec)
+            string enumStr = _doctors[i].Speciality.ToString().ToLower();
+            string formattedStr = ClinicFormatter.FormatSpeciality(_doctors[i].Speciality).ToLower();
+            if (enumStr.Contains(q) || formattedStr.Contains(q))
             {
                 matchCount++;
             }
@@ -49,7 +66,33 @@ public class DoctorManager
         int index = 0;
         for (int i = 0; i < _count; i++)
         {
-            if (_doctors[i].Speciality.ToLower() == spec)
+            string enumStr = _doctors[i].Speciality.ToString().ToLower();
+            string formattedStr = ClinicFormatter.FormatSpeciality(_doctors[i].Speciality).ToLower();
+            if (enumStr.Contains(q) || formattedStr.Contains(q))
+            {
+                result[index++] = _doctors[i];
+            }
+        }
+
+        return result;
+    }
+
+    public Doctor[] FindBySpeciality(Speciality speciality)
+    {
+        int matchCount = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_doctors[i].Speciality == speciality)
+            {
+                matchCount++;
+            }
+        }
+
+        Doctor[] result = new Doctor[matchCount];
+        int index = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_doctors[i].Speciality == speciality)
             {
                 result[index++] = _doctors[i];
             }
@@ -132,7 +175,7 @@ public class DoctorManager
             bool isFirstOccurrence = true;
             for (int j = 0; j < i; j++)
             {
-                if (_doctors[i].Speciality.Equals(_doctors[j].Speciality, StringComparison.OrdinalIgnoreCase))
+                if (_doctors[i].Speciality == _doctors[j].Speciality)
                 {
                     isFirstOccurrence = false;
                     break;
@@ -144,7 +187,7 @@ public class DoctorManager
                 int specCount = 0;
                 for (int k = 0; k < _count; k++)
                 {
-                    if (_doctors[k].Speciality.Equals(_doctors[i].Speciality, StringComparison.OrdinalIgnoreCase))
+                    if (_doctors[k].Speciality == _doctors[i].Speciality)
                     {
                         specCount++;
                     }
