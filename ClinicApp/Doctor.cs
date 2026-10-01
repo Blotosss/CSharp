@@ -1,4 +1,4 @@
-﻿namespace ClinicApp;
+namespace ClinicApp;
 
 public class Doctor
 {
@@ -7,7 +7,7 @@ public class Doctor
     public int Id { get; }
     public string FirstName { get; set; }
     public string LastName { get; set; }
-    public string Speciality { get; set; }
+    public Speciality Speciality { get; set; }
     public string LicenseNumber { get; set; }
     public string Phone { get; set; }
     public int WorkStartHour { get; set; }
@@ -17,7 +17,7 @@ public class Doctor
     public string WorkSchedule => $"{WorkStartHour:D2}:00–{WorkEndHour:D2}:00";
 
     public bool IsAvailableNow => CanAcceptAt(DateTime.Now.Hour);
-    public Doctor(string firstName, string lastName, string speciality, string licenseNumber, string phone)
+    public Doctor(string firstName, string lastName, Speciality speciality, string licenseNumber, string phone)
     {
         Id = _nextId++;
         FirstName = firstName;
@@ -28,12 +28,12 @@ public class Doctor
         WorkStartHour = 8;
         WorkEndHour = 17;
     }
-    public Doctor(string firstName, string lastName, string speciality)
+    public Doctor(string firstName, string lastName, Speciality speciality)
         : this(firstName, lastName, speciality, "LIC-000", "0000000000")
     {
     }
     public Doctor()
-        : this("Невідомий", "Лікар", "Загальна практика")
+        : this("Невідомий", "Лікар", Speciality.General)
     {
     }
     public bool CanAcceptAt(int hour)

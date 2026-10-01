@@ -1,4 +1,4 @@
-﻿namespace ClinicApp;
+namespace ClinicApp;
 
 public class DoctorManager
 {
@@ -39,7 +39,7 @@ public class DoctorManager
 
         for (int i = 0; i < _count; i++)
         {
-            if (_doctors[i].Speciality.ToLower() == spec)
+            if (_doctors[i].Speciality.ToString().ToLower().Contains(spec))
             {
                 matchCount++;
             }
@@ -49,7 +49,7 @@ public class DoctorManager
         int index = 0;
         for (int i = 0; i < _count; i++)
         {
-            if (_doctors[i].Speciality.ToLower() == spec)
+            if (_doctors[i].Speciality.ToString().ToLower().Contains(spec))
             {
                 result[index++] = _doctors[i];
             }
@@ -132,7 +132,7 @@ public class DoctorManager
             bool isFirstOccurrence = true;
             for (int j = 0; j < i; j++)
             {
-                if (_doctors[i].Speciality.Equals(_doctors[j].Speciality, StringComparison.OrdinalIgnoreCase))
+                if (_doctors[i].Speciality == _doctors[j].Speciality)
                 {
                     isFirstOccurrence = false;
                     break;
@@ -144,7 +144,7 @@ public class DoctorManager
                 int specCount = 0;
                 for (int k = 0; k < _count; k++)
                 {
-                    if (_doctors[k].Speciality.Equals(_doctors[i].Speciality, StringComparison.OrdinalIgnoreCase))
+                    if (_doctors[k].Speciality == _doctors[i].Speciality)
                     {
                         specCount++;
                     }
