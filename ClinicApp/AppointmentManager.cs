@@ -1,4 +1,4 @@
-﻿namespace ClinicApp;
+namespace ClinicApp;
 
 public class AppointmentManager
 {
@@ -10,6 +10,15 @@ public class AppointmentManager
     private DoctorManager _doctors;
 
     public int Count => _count;
+
+    public Appointment? this[int index]
+    {
+        get
+        {
+            if (index < 0 || index >= _count) return null;
+            return _appointments[index];
+        }
+    }
 
     public AppointmentManager(PatientManager patients, DoctorManager doctors)
     {
