@@ -41,14 +41,22 @@ public class DoctorManager
         return null;
     }
 
-    public Doctor[] FindBySpeciality(string speciality)
+    public bool TryFindById(int id, [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out Doctor? doctor)
     {
-        string spec = speciality.ToLower();
+        doctor = FindById(id);
+        return doctor != null;
+    }
+
+    public Doctor[] FindBySpeciality(string query)
+    {
+        string q = query.ToLower();
         int matchCount = 0;
 
         for (int i = 0; i < _count; i++)
         {
-            if (_doctors[i].Speciality.ToString().ToLower().Contains(spec))
+            string enumStr = _doctors[i].Speciality.ToString().ToLower();
+            string formattedStr = ClinicFormatter.FormatSpeciality(_doctors[i].Speciality).ToLower();
+            if (enumStr.Contains(q) || formattedStr.Contains(q))
             {
                 matchCount++;
             }
@@ -58,7 +66,33 @@ public class DoctorManager
         int index = 0;
         for (int i = 0; i < _count; i++)
         {
-            if (_doctors[i].Speciality.ToString().ToLower().Contains(spec))
+            string enumStr = _doctors[i].Speciality.ToString().ToLower();
+            string formattedStr = ClinicFormatter.FormatSpeciality(_doctors[i].Speciality).ToLower();
+            if (enumStr.Contains(q) || formattedStr.Contains(q))
+            {
+                result[index++] = _doctors[i];
+            }
+        }
+
+        return result;
+    }
+
+    public Doctor[] FindBySpeciality(Speciality speciality)
+    {
+        int matchCount = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_doctors[i].Speciality == speciality)
+            {
+                matchCount++;
+            }
+        }
+
+        Doctor[] result = new Doctor[matchCount];
+        int index = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_doctors[i].Speciality == speciality)
             {
                 result[index++] = _doctors[i];
             }
