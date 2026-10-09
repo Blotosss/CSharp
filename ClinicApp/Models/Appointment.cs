@@ -14,10 +14,7 @@ public class Appointment
         get => _durationMinutes;
         set
         {
-            if (value <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(DurationMinutes), "Тривалість має бути більшою за 0.");
-            }
+            ClinicValidator.ValidatePositive(value, nameof(DurationMinutes));
             _durationMinutes = value;
         }
     }

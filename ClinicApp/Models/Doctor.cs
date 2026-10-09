@@ -17,10 +17,7 @@ public class Doctor
         get => _firstName;
         set
         {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > 50)
-            {
-                throw new ArgumentException("Ім'я не може бути порожнім або довшим за 50 символів.", nameof(FirstName));
-            }
+            ClinicValidator.ValidateName(value, nameof(FirstName));
             _firstName = value;
         }
     }
@@ -30,10 +27,7 @@ public class Doctor
         get => _lastName;
         set
         {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > 50)
-            {
-                throw new ArgumentException("Прізвище не може бути порожнім або довшим за 50 символів.", nameof(LastName));
-            }
+            ClinicValidator.ValidateName(value, nameof(LastName));
             _lastName = value;
         }
     }
@@ -56,10 +50,7 @@ public class Doctor
         get => _phone;
         set
         {
-            if (value == null || value.Length != 10 || !IsDigitsOnly(value))
-            {
-                throw new ArgumentException("Номер телефону має містити рівно 10 цифр.", nameof(Phone));
-            }
+            ClinicValidator.ValidatePhone(value);
             _phone = value;
         }
     }
@@ -95,15 +86,6 @@ public class Doctor
     public bool CanAcceptAt(int hour)
     {
         return Schedule.Contains(hour);
-    }
-
-    private static bool IsDigitsOnly(string str)
-    {
-        foreach (char c in str)
-        {
-            if (c < '0' || c > '9') return false;
-        }
-        return true;
     }
 
     public override string ToString()
