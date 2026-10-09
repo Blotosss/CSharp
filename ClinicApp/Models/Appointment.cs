@@ -1,5 +1,6 @@
-namespace ClinicApp;
-
+using ClinicApp.Enums;
+using ClinicApp.Utils;
+namespace ClinicApp.Models;
 public class Appointment
 {
     private static int _nextId = 1;

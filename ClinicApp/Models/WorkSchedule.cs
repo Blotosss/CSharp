@@ -1,5 +1,4 @@
-namespace ClinicApp;
-
+namespace ClinicApp.Models;
 public struct WorkSchedule
 {
     public int Start { get; }
