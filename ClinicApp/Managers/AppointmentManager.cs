@@ -1,14 +1,17 @@
 using ClinicApp.Models;
 using ClinicApp.Enums;
+using ClinicApp.Interfaces;
+
 namespace ClinicApp.Managers;
+
 public class AppointmentManager
 {
     private const int MaxAppointments = 500;
-    private Appointment[] _appointments = new Appointment[MaxAppointments];
-    private int _count = 0;
+    private readonly Appointment[] _appointments = new Appointment[MaxAppointments];
+    private int _count;
 
-    private PatientManager _patients;
-    private DoctorManager _doctors;
+    private readonly PatientManager _patients;
+    private readonly DoctorManager _doctors;
 
     public int Count => _count;
 
@@ -90,6 +93,29 @@ public class AppointmentManager
         return app.Complete();
     }
 
+    public static int CancelAll(ICancellable[] items, string reason = "")
+    {
+        int count = 0;
+        foreach (var item in items)
+        {
+            if (item.Cancel(reason))
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public Appointment[] GetAll()
+    {
+        Appointment[] result = new Appointment[_count];
+        for (int i = 0; i < _count; i++)
+        {
+            result[i] = _appointments[i];
+        }
+        return result;
+    }
+
     public Appointment[] GetByPatient(int patientId)
     {
         int matchCount = 0;
@@ -130,7 +156,7 @@ public class AppointmentManager
         return result;
     }
 
-    public Appointment[] GetByDate(DateTime date)
+    private Appointment[] GetByDate(DateTime date)
     {
         int matchCount = 0;
         for (int i = 0; i < _count; i++)
@@ -175,7 +201,7 @@ public class AppointmentManager
         return result;
     }
 
-    public void DisplayAppointment(Appointment app)
+    private void DisplayAppointment(Appointment app)
     {
         Patient? p = _patients.FindById(app.PatientId);
         Doctor? d = _doctors.FindById(app.DoctorId);
