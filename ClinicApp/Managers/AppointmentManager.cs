@@ -1,6 +1,7 @@
 using ClinicApp.Models;
 using ClinicApp.Enums;
 using ClinicApp.Interfaces;
+using System.Globalization;
 
 namespace ClinicApp.Managers;
 
@@ -30,7 +31,7 @@ public class AppointmentManager
         _doctors = doctors;
     }
 
-    public bool Book(int patientId, int doctorId, DateTime scheduledAt, int durationMinutes = 30)
+    private bool AddAppointment(Appointment appointment, int patientId, int doctorId)
     {
         if (_patients.FindById(patientId) == null)
         {
@@ -50,14 +51,31 @@ public class AppointmentManager
             return false;
         }
 
-        Appointment appointment = new Appointment(patientId, doctorId, scheduledAt, durationMinutes);
         _appointments[_count] = appointment;
         _count++;
 
         Patient p = _patients.FindById(patientId)!;
         Doctor d = _doctors.FindById(doctorId)!;
-        Console.WriteLine($"Запис [{appointment.Id}] створено: {p.FullName} -> {d.FullName} о {scheduledAt:dd.MM.yyyy HH:mm}");
+        Console.WriteLine($"Запис [{appointment.Id}] створено: {p.FullName} -> {d.FullName} о {appointment.ScheduledAt:dd.MM.yyyy HH:mm}");
         return true;
+    }
+
+    public bool Book(int patientId, int doctorId, DateTime scheduledAt, int durationMinutes = 30)
+    {
+        Appointment appointment = new RegularAppointment(patientId, doctorId, scheduledAt, durationMinutes);
+        return AddAppointment(appointment, patientId, doctorId);
+    }
+
+    public bool BookUrgent(int patientId, int doctorId, DateTime scheduledAt, string urgencyNote = "", int durationMinutes = 30)
+    {
+        Appointment appointment = new UrgentAppointment(patientId, doctorId, scheduledAt, urgencyNote, durationMinutes);
+        return AddAppointment(appointment, patientId, doctorId);
+    }
+
+    public bool BookSpecialist(int patientId, int doctorId, DateTime scheduledAt, string topic = "", int durationMinutes = 45)
+    {
+        Appointment appointment = new SpecialistAppointment(patientId, doctorId, scheduledAt, topic, durationMinutes);
+        return AddAppointment(appointment, patientId, doctorId);
     }
 
     private Appointment? FindById(int id)
@@ -90,7 +108,12 @@ public class AppointmentManager
         Appointment? app = FindById(id);
         if (app == null) return false;
 
-        return app.Complete();
+        if (app.Status == AppointmentStatus.Scheduled)
+        {
+            app.Complete();
+            return true;
+        }
+        return false;
     }
 
     public static int CancelAll(ICancellable[] items, string reason = "")
@@ -186,16 +209,76 @@ public class AppointmentManager
         int matchCount = 0;
         for (int i = 0; i < _count; i++)
         {
-            if (_appointments[i].IsUpcoming) matchCount++;
+            if (_appointments[i].ScheduledAt > DateTime.Now && _appointments[i].Status == AppointmentStatus.Scheduled) matchCount++;
         }
 
         Appointment[] result = new Appointment[matchCount];
         int index = 0;
         for (int i = 0; i < _count; i++)
         {
-            if (_appointments[i].IsUpcoming)
+            if (_appointments[i].ScheduledAt > DateTime.Now && _appointments[i].Status == AppointmentStatus.Scheduled)
             {
                 result[index++] = _appointments[i];
+            }
+        }
+        return result;
+    }
+
+    public UrgentAppointment[] GetUrgent()
+    {
+        int matchCount = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is UrgentAppointment) matchCount++;
+        }
+
+        UrgentAppointment[] result = new UrgentAppointment[matchCount];
+        int index = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is UrgentAppointment urgent)
+            {
+                result[index++] = urgent;
+            }
+        }
+        return result;
+    }
+
+    public SpecialistAppointment[] GetSpecialist()
+    {
+        int matchCount = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is SpecialistAppointment) matchCount++;
+        }
+
+        SpecialistAppointment[] result = new SpecialistAppointment[matchCount];
+        int index = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is SpecialistAppointment specialist)
+            {
+                result[index++] = specialist;
+            }
+        }
+        return result;
+    }
+
+    public RegularAppointment[] GetRegular()
+    {
+        int matchCount = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is RegularAppointment) matchCount++;
+        }
+
+        RegularAppointment[] result = new RegularAppointment[matchCount];
+        int index = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is RegularAppointment regular)
+            {
+                result[index++] = regular;
             }
         }
         return result;
@@ -210,12 +293,12 @@ public class AppointmentManager
         string doctorName = d != null ? d.FullName : $"Лікар #{app.DoctorId}";
 
         string startStr = app.ScheduledAt.ToString("dd.MM.yyyy HH:mm");
-        string endStr = app.EndsAt.ToString("HH:mm");
+        string endStr = app.ScheduledAt.AddMinutes(app.DurationMinutes).ToString("HH:mm");
 
-        string line = $"[{app.Id}] {patientName} -> {doctorName} | {startStr}–{endStr} | {app.Status}";
-        if (!string.IsNullOrEmpty(app.Notes))
+        string line = $"[{app.Id}] {app.GetDescription()} | {patientName} -> {doctorName} | {startStr}–{endStr} | {app.Status} | {app.GetCost().ToString("F2", CultureInfo.InvariantCulture)} грн";
+        if (!string.IsNullOrEmpty(app.CancellationReason))
         {
-            line += $" | {app.Notes}";
+            line += $" | {app.CancellationReason}";
         }
 
         Console.WriteLine(line);

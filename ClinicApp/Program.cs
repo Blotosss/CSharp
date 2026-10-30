@@ -239,6 +239,7 @@ class Program
             Console.WriteLine("6. Записи лікаря");
             Console.WriteLine("7. Майбутні записи");
             Console.WriteLine("8. Скасувати всі записи пацієнта");
+            Console.WriteLine("9. За типом прийому");
             Console.WriteLine("0. Назад");
             Console.Write("Оберіть: ");
 
@@ -253,7 +254,26 @@ class Program
                         Console.Write("ID лікаря: ");
                         if (int.TryParse(Console.ReadLine(), out int dId))
                         {
-                            clinic.Appointments.Book(pId, dId, DateTime.Now.AddHours(1));
+                            Console.WriteLine("Тип прийому: 1 - Звичайний, 2 - Терміновий, 3 - Консультація спеціаліста");
+                            if (int.TryParse(Console.ReadLine(), out int tChoice))
+                            {
+                                if (tChoice == 2)
+                                {
+                                    Console.Write("Причина терміновості: ");
+                                    string note = Console.ReadLine() ?? "";
+                                    clinic.Appointments.BookUrgent(pId, dId, DateTime.Now.AddHours(1), note);
+                                }
+                                else if (tChoice == 3)
+                                {
+                                    Console.Write("Тема консультації: ");
+                                    string topic = Console.ReadLine() ?? "";
+                                    clinic.Appointments.BookSpecialist(pId, dId, DateTime.Now.AddHours(1), topic);
+                                }
+                                else
+                                {
+                                    clinic.Appointments.Book(pId, dId, DateTime.Now.AddHours(1));
+                                }
+                            }
                         }
                     }
                     break;
@@ -302,6 +322,30 @@ class Program
                         Appointment[] patAppointments = clinic.Appointments.GetByPatient(cancelPatId);
                         int cancelledCount = AppointmentManager.CancelAll(patAppointments, reason);
                         Console.WriteLine($"Скасовано записів: {cancelledCount}");
+                    }
+                    break;
+                case 9:
+                    Console.WriteLine("1. Термінові");
+                    Console.WriteLine("2. Консультації спеціаліста");
+                    Console.WriteLine("3. Звичайні");
+                    Console.Write("Оберіть підтип: ");
+                    if (int.TryParse(Console.ReadLine(), out int typeChoice))
+                    {
+                        switch (typeChoice)
+                        {
+                            case 1:
+                                clinic.Appointments.DisplayList(clinic.Appointments.GetUrgent());
+                                break;
+                            case 2:
+                                clinic.Appointments.DisplayList(clinic.Appointments.GetSpecialist());
+                                break;
+                            case 3:
+                                clinic.Appointments.DisplayList(clinic.Appointments.GetRegular());
+                                break;
+                            default:
+                                Console.WriteLine("Невірний вибір.");
+                                break;
+                        }
                     }
                     break;
                 case 0:
