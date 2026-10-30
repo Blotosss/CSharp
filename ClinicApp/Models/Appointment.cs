@@ -8,90 +8,100 @@ public class Appointment : IPayable, ICancellable
 {
     private static int _nextId = 1;
 
-    private int _durationMinutes;
-    private bool _isPaid;
-
-    public int DurationMinutes
-    {
-        get => _durationMinutes;
-        set
-        {
-            ClinicValidator.ValidatePositive(value, nameof(DurationMinutes));
-            _durationMinutes = value;
-        }
-    }
-
     public int Id { get; }
-    public int PatientId { get; }
-    public int DoctorId { get; }
+    public int PatientId { get; set; }
+    public int DoctorId { get; set; }
     public DateTime ScheduledAt { get; set; }
-    public AppointmentStatus Status { get; private set; }
-    public string Notes { get; private set; }
+    public int DurationMinutes { get; set; }
+    public AppointmentStatus Status { get; set; }
+    public string CancellationReason { get; private set; } = "";
+    public bool IsPaid { get; private set; }
 
-    public DateTime EndsAt => ScheduledAt.AddMinutes(DurationMinutes);
-    public bool IsUpcoming => ScheduledAt > DateTime.Now && Status == AppointmentStatus.Scheduled;
-
-    public bool IsPaid => _isPaid;
-
-    public decimal GetCost()
-    {
-        return DurationMinutes * 10m;
-    }
-
-    public void MarkPaid()
-    {
-        if (!IsCancelled)
-        {
-            _isPaid = true;
-        }
-    }
-
+    // Реалізація властивості з інтерфейсу ICancellable
     public bool IsCancelled => Status == AppointmentStatus.Cancelled;
-    public string CancellationReason => IsCancelled ? Notes : "";
 
-    public Appointment(int patientId, int doctorId, DateTime scheduledAt, int durationMinutes = 30)
+    public Appointment(int patientId, int doctorId, DateTime scheduledAt, int durationMinutes)
     {
         PatientId = patientId;
         DoctorId = doctorId;
         ScheduledAt = scheduledAt;
         DurationMinutes = durationMinutes;
         Status = AppointmentStatus.Scheduled;
-        Notes = "";
+        IsPaid = false;
         Id = _nextId++;
-        _isPaid = false;
     }
 
-    public bool Cancel(string reason = "")
+    public Appointment(int patientId, int doctorId, DateTime scheduledAt)
+        : this(patientId, doctorId, scheduledAt, 30)
     {
-        if (Status != AppointmentStatus.Scheduled) return false;
+    }
 
-        Status = AppointmentStatus.Cancelled;
-        if (!string.IsNullOrEmpty(reason))
+    public Appointment()
+        : this(0, 0, DateTime.Now, 30)
+    {
+    }
+
+    // Віртуальний метод GetCost()
+    public virtual decimal GetCost()
+    {
+        return DurationMinutes * 10m;
+    }
+
+    // Новий віртуальний метод GetDescription()
+    public virtual string GetDescription()
+    {
+        return "Прийом";
+    }
+
+    // Звичайний метод GetPriority() (не virtual)
+    public int GetPriority()
+    {
+        return 3;
+    }
+
+    public void MarkPaid()
+    {
+        if (Status == AppointmentStatus.Cancelled) return;
+        IsPaid = true;
+    }
+
+    public bool Cancel(string reason)
+    {
+        if (Status == AppointmentStatus.Completed || Status == AppointmentStatus.Cancelled)
         {
-            Notes = reason;
+            return false;
         }
+        Status = AppointmentStatus.Cancelled;
+        CancellationReason = reason ?? "";
         return true;
     }
 
-    public bool Complete()
+    public bool Cancel()
     {
-        if (Status != AppointmentStatus.Scheduled) return false;
+        return Cancel("");
+    }
 
-        Status = AppointmentStatus.Completed;
-        return true;
+    public void Complete()
+    {
+        if (Status == AppointmentStatus.Scheduled)
+        {
+            Status = AppointmentStatus.Completed;
+        }
     }
 
     public override string ToString()
     {
-        string startStr = ScheduledAt.ToString("dd.MM.yyyy HH:mm");
-        string endStr = EndsAt.ToString("HH:mm");
-        string baseStr = $"[{Id}] Пацієнт #{PatientId} -> Лікар #{DoctorId} | {startStr}–{endStr} | {Status}";
-
-        if (!string.IsNullOrEmpty(Notes))
+        string statusStr = Status switch
         {
-            baseStr += $" | {Notes}";
-        }
+            AppointmentStatus.Scheduled => "Scheduled",
+            AppointmentStatus.Completed => "Completed",
+            AppointmentStatus.Cancelled => "Cancelled",
+            _ => "Unknown"
+        };
 
-        return baseStr;
+        string timeFormatted = $"{ScheduledAt:dd.MM.yyyy HH:mm}-{ScheduledAt.AddMinutes(DurationMinutes):HH:mm}";
+        string costFormatted = $"{GetCost().ToString("F2", System.Globalization.CultureInfo.InvariantCulture)} грн";
+
+        return $"[{Id}] {GetDescription()} | Пацієнт #{PatientId} → Лікар #{DoctorId} | {timeFormatted} | {statusStr} | {costFormatted}";
     }
 }

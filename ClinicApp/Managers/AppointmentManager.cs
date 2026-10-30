@@ -90,7 +90,12 @@ public class AppointmentManager
         Appointment? app = FindById(id);
         if (app == null) return false;
 
-        return app.Complete();
+        if (app.Status == AppointmentStatus.Scheduled)
+        {
+            app.Complete();
+            return true;
+        }
+        return false;
     }
 
     public static int CancelAll(ICancellable[] items, string reason = "")
@@ -186,14 +191,14 @@ public class AppointmentManager
         int matchCount = 0;
         for (int i = 0; i < _count; i++)
         {
-            if (_appointments[i].IsUpcoming) matchCount++;
+            if (_appointments[i].ScheduledAt > DateTime.Now && _appointments[i].Status == AppointmentStatus.Scheduled) matchCount++;
         }
 
         Appointment[] result = new Appointment[matchCount];
         int index = 0;
         for (int i = 0; i < _count; i++)
         {
-            if (_appointments[i].IsUpcoming)
+            if (_appointments[i].ScheduledAt > DateTime.Now && _appointments[i].Status == AppointmentStatus.Scheduled)
             {
                 result[index++] = _appointments[i];
             }
@@ -210,12 +215,12 @@ public class AppointmentManager
         string doctorName = d != null ? d.FullName : $"Лікар #{app.DoctorId}";
 
         string startStr = app.ScheduledAt.ToString("dd.MM.yyyy HH:mm");
-        string endStr = app.EndsAt.ToString("HH:mm");
+        string endStr = app.ScheduledAt.AddMinutes(app.DurationMinutes).ToString("HH:mm");
 
         string line = $"[{app.Id}] {patientName} -> {doctorName} | {startStr}–{endStr} | {app.Status}";
-        if (!string.IsNullOrEmpty(app.Notes))
+        if (!string.IsNullOrEmpty(app.CancellationReason))
         {
-            line += $" | {app.Notes}";
+            line += $" | {app.CancellationReason}";
         }
 
         Console.WriteLine(line);
