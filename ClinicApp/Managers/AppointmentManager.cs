@@ -30,7 +30,7 @@ public class AppointmentManager
         _doctors = doctors;
     }
 
-    public bool Book(int patientId, int doctorId, DateTime scheduledAt, int durationMinutes = 30)
+    private bool AddAppointment(Appointment appointment, int patientId, int doctorId)
     {
         if (_patients.FindById(patientId) == null)
         {
@@ -50,14 +50,31 @@ public class AppointmentManager
             return false;
         }
 
-        Appointment appointment = new Appointment(patientId, doctorId, scheduledAt, durationMinutes);
         _appointments[_count] = appointment;
         _count++;
 
         Patient p = _patients.FindById(patientId)!;
         Doctor d = _doctors.FindById(doctorId)!;
-        Console.WriteLine($"Запис [{appointment.Id}] створено: {p.FullName} -> {d.FullName} о {scheduledAt:dd.MM.yyyy HH:mm}");
+        Console.WriteLine($"Запис [{appointment.Id}] створено: {p.FullName} -> {d.FullName} о {appointment.ScheduledAt:dd.MM.yyyy HH:mm}");
         return true;
+    }
+
+    public bool Book(int patientId, int doctorId, DateTime scheduledAt, int durationMinutes = 30)
+    {
+        Appointment appointment = new RegularAppointment(patientId, doctorId, scheduledAt, durationMinutes);
+        return AddAppointment(appointment, patientId, doctorId);
+    }
+
+    public bool BookUrgent(int patientId, int doctorId, DateTime scheduledAt, string urgencyNote = "", int durationMinutes = 30)
+    {
+        Appointment appointment = new UrgentAppointment(patientId, doctorId, scheduledAt, urgencyNote, durationMinutes);
+        return AddAppointment(appointment, patientId, doctorId);
+    }
+
+    public bool BookSpecialist(int patientId, int doctorId, DateTime scheduledAt, string topic = "", int durationMinutes = 45)
+    {
+        Appointment appointment = new SpecialistAppointment(patientId, doctorId, scheduledAt, topic, durationMinutes);
+        return AddAppointment(appointment, patientId, doctorId);
     }
 
     private Appointment? FindById(int id)
