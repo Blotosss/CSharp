@@ -1,6 +1,5 @@
 using ClinicApp.Enums;
 using ClinicApp.Interfaces;
-using ClinicApp.Utils;
 
 namespace ClinicApp.Models;
 
@@ -17,8 +16,9 @@ public class Appointment : IPayable, ICancellable
     public string CancellationReason { get; private set; } = "";
     public bool IsPaid { get; private set; }
 
-    // Реалізація властивості з інтерфейсу ICancellable
     public bool IsCancelled => Status == AppointmentStatus.Cancelled;
+
+    public decimal DiscountMultiplier { get; set; } = 1.0m;
 
     public Appointment(int patientId, int doctorId, DateTime scheduledAt, int durationMinutes)
     {
@@ -41,19 +41,16 @@ public class Appointment : IPayable, ICancellable
     {
     }
 
-    // Віртуальний метод GetCost()
     public virtual decimal GetCost()
     {
-        return DurationMinutes * 10m;
+        return (DurationMinutes * 10m) * DiscountMultiplier;
     }
 
-    // Новий віртуальний метод GetDescription()
     public virtual string GetDescription()
     {
         return "Прийом";
     }
 
-    // Звичайний метод GetPriority() (не virtual)
     public int GetPriority()
     {
         return 3;
