@@ -1,6 +1,7 @@
 using ClinicApp.Models;
 using ClinicApp.Enums;
 using ClinicApp.Interfaces;
+using System.Globalization;
 
 namespace ClinicApp.Managers;
 
@@ -223,6 +224,66 @@ public class AppointmentManager
         return result;
     }
 
+    public UrgentAppointment[] GetUrgent()
+    {
+        int matchCount = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is UrgentAppointment) matchCount++;
+        }
+
+        UrgentAppointment[] result = new UrgentAppointment[matchCount];
+        int index = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is UrgentAppointment urgent)
+            {
+                result[index++] = urgent;
+            }
+        }
+        return result;
+    }
+
+    public SpecialistAppointment[] GetSpecialist()
+    {
+        int matchCount = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is SpecialistAppointment) matchCount++;
+        }
+
+        SpecialistAppointment[] result = new SpecialistAppointment[matchCount];
+        int index = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is SpecialistAppointment specialist)
+            {
+                result[index++] = specialist;
+            }
+        }
+        return result;
+    }
+
+    public RegularAppointment[] GetRegular()
+    {
+        int matchCount = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is RegularAppointment) matchCount++;
+        }
+
+        RegularAppointment[] result = new RegularAppointment[matchCount];
+        int index = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_appointments[i] is RegularAppointment regular)
+            {
+                result[index++] = regular;
+            }
+        }
+        return result;
+    }
+
     private void DisplayAppointment(Appointment app)
     {
         Patient? p = _patients.FindById(app.PatientId);
@@ -234,7 +295,7 @@ public class AppointmentManager
         string startStr = app.ScheduledAt.ToString("dd.MM.yyyy HH:mm");
         string endStr = app.ScheduledAt.AddMinutes(app.DurationMinutes).ToString("HH:mm");
 
-        string line = $"[{app.Id}] {patientName} -> {doctorName} | {startStr}–{endStr} | {app.Status}";
+        string line = $"[{app.Id}] {app.GetDescription()} | {patientName} -> {doctorName} | {startStr}–{endStr} | {app.Status} | {app.GetCost().ToString("F2", CultureInfo.InvariantCulture)} грн";
         if (!string.IsNullOrEmpty(app.CancellationReason))
         {
             line += $" | {app.CancellationReason}";
