@@ -22,7 +22,8 @@ class Program
             Console.WriteLine("║ 3. Записи         — прийоми, скасування        ║");
             Console.WriteLine("║ 4. Медична картка — діагнози, рецепти          ║");
             Console.WriteLine("║ 5. Рахунки        — оплата, борги              ║");
-            Console.WriteLine("║ 6. Звіт           — загальна статистика        ║");
+            Console.WriteLine("║ 6. Черга          — очікування, прийом         ║");
+            Console.WriteLine("║ 7. Звіт           — загальна статистика        ║");
             Console.WriteLine("║ 0. Вийти                                       ║");
             Console.WriteLine("╚════════════════════════════════════════════════╝");
             Console.Write("Оберіть розділ: ");
@@ -51,6 +52,9 @@ class Program
                     BillingMenu(clinic);
                     break;
                 case 6:
+                    WaitingRoomMenu(clinic);
+                    break;
+                case 7:
                     ShowReport(clinic);
                     break;
                 case 0:
@@ -443,5 +447,84 @@ class Program
         Console.WriteLine($"Всього лікарів: {clinic.Doctors.Count}");
         Console.WriteLine($"Всього записів: {clinic.Appointments.Count}");
         Console.WriteLine($"Загальний борг клініки: {clinic.Billing.GetTotalDebt().ToString("F2", CultureInfo.InvariantCulture)} грн");
+    }
+
+    private static void WaitingRoomMenu(Clinic clinic)
+    {
+        while (true)
+        {
+            Console.WriteLine("\n── Черга ───────────────────────");
+            Console.WriteLine("1. Додати пацієнта до черги");
+            Console.WriteLine("2. Прийняти першого");
+            Console.WriteLine("3. Хто перший?");
+            Console.WriteLine("4. Переглянути всю чергу");
+            Console.WriteLine("0. Назад");
+            Console.Write("Оберіть: ");
+
+            if (!int.TryParse(Console.ReadLine(), out int choice)) continue;
+
+            switch (choice)
+            {
+                case 1:
+                    Console.Write("ID пацієнта: ");
+                    if (int.TryParse(Console.ReadLine(), out int patientId))
+                    {
+                        var patient = clinic.Patients.FindById(patientId);
+                        if (patient != null)
+                        {
+                            clinic.WaitingRoom.Enqueue(patient);
+                            Console.WriteLine($"Пацієнта {patient.FullName} додано до черги.");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Пацієнта не знайдено.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Некоректний ID.");
+                    }
+                    break;
+                case 2:
+                    try
+                    {
+                        var patient = clinic.WaitingRoom.Dequeue();
+                        Console.WriteLine($"Прийнято: {patient.FullName}. У черзі лишилось: {clinic.WaitingRoom.Count}");
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        Console.WriteLine($"Помилка: {ex.Message}");
+                    }
+                    break;
+                case 3:
+                    try
+                    {
+                        var patient = clinic.WaitingRoom.Peek();
+                        Console.WriteLine($"Перший у черзі: {patient.FullName}");
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        Console.WriteLine($"Помилка: {ex.Message}");
+                    }
+                    break;
+                case 4:
+                    var array = clinic.WaitingRoom.ToArray();
+                    if (array.Length == 0)
+                    {
+                        Console.WriteLine("Черга порожня.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Список пацієнтів у черзі:");
+                        for (int i = 0; i < array.Length; i++)
+                        {
+                            Console.WriteLine($"{i + 1}. {array[i].FullName}");
+                        }
+                    }
+                    break;
+                case 0:
+                    return;
+            }
+        }
     }
 }
