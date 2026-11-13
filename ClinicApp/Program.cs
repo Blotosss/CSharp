@@ -3,6 +3,7 @@ using ClinicApp.Managers;
 using ClinicApp.Models;
 using ClinicApp.Enums;
 using ClinicApp.Interfaces;
+using ClinicApp.Comparators;
 
 namespace ClinicApp;
 
@@ -24,6 +25,7 @@ class Program
             Console.WriteLine("║ 5. Рахунки        — оплата, борги              ║");
             Console.WriteLine("║ 6. Черга          — очікування, прийом         ║");
             Console.WriteLine("║ 7. Звіт           — загальна статистика        ║");
+            Console.WriteLine("║ 8. Аналітика      — рейтинги та звіти          ║");
             Console.WriteLine("║ 0. Вийти                                       ║");
             Console.WriteLine("╚════════════════════════════════════════════════╝");
             Console.Write("Оберіть розділ: ");
@@ -56,6 +58,9 @@ class Program
                     break;
                 case 7:
                     ShowReport(clinic);
+                    break;
+                case 8:
+                    AnalyticsMenu(clinic);
                     break;
                 case 0:
                     Console.WriteLine("Вихід з програми...");
@@ -526,5 +531,98 @@ class Program
                     return;
             }
         }
+    }
+
+    private static void AnalyticsMenu(Clinic clinic)
+    {
+        while (true)
+        {
+            Console.WriteLine("\n── Аналітика ───────────────────");
+            Console.WriteLine("1. Лікарі за навантаженням");
+            Console.WriteLine("2. Лікарі за виручкою");
+            Console.WriteLine("3. Лікарі за іменем");
+            Console.WriteLine("4. Пацієнти за кількістю візитів");
+            Console.WriteLine("5. Пацієнти за витратами");
+            Console.WriteLine("0. Назад");
+            Console.Write("Оберіть: ");
+
+            if (!int.TryParse(Console.ReadLine(), out int choice)) continue;
+
+            switch (choice)
+            {
+                case 1:
+                {
+                    List<DoctorStats> doctors = CollectDoctorStats(clinic);
+                    doctors.Sort();
+                    foreach (DoctorStats ds in doctors)
+                    {
+                        Console.WriteLine(ds);
+                    }
+                    break;
+                }
+                case 2:
+                {
+                    List<DoctorStats> doctors = CollectDoctorStats(clinic);
+                    doctors.Sort(new DoctorStatsByRevenue());
+                    foreach (DoctorStats ds in doctors)
+                    {
+                        Console.WriteLine(ds);
+                    }
+                    break;
+                }
+                case 3:
+                {
+                    List<DoctorStats> doctors = CollectDoctorStats(clinic);
+                    doctors.Sort(new DoctorStatsByName());
+                    foreach (DoctorStats ds in doctors)
+                    {
+                        Console.WriteLine(ds);
+                    }
+                    break;
+                }
+                case 4:
+                {
+                    List<PatientStats> patients = CollectPatientStats(clinic);
+                    patients.Sort();
+                    foreach (PatientStats ps in patients)
+                    {
+                        Console.WriteLine(ps);
+                    }
+                    break;
+                }
+                case 5:
+                {
+                    List<PatientStats> patients = CollectPatientStats(clinic);
+                    patients.Sort(new PatientStatsBySpent());
+                    foreach (PatientStats ps in patients)
+                    {
+                        Console.WriteLine(ps);
+                    }
+                    break;
+                }
+                case 0:
+                    return;
+            }
+        }
+    }
+
+    private static List<DoctorStats> CollectDoctorStats(Clinic clinic)
+    {
+        List<DoctorStats> list = new List<DoctorStats>();
+        foreach (DoctorStats stats in clinic.Analytics.ComputeDoctorStats())
+        {
+            list.Add(stats);
+        }
+        return list;
+    }
+
+    private static List<PatientStats> CollectPatientStats(Clinic clinic)
+    {
+        List<PatientStats> list = new List<PatientStats>();
+        foreach (PatientStats stats in clinic.Analytics.ComputePatientStats())
+        {
+            list.Add(stats);
+        }
+        return list;
     }
 }
