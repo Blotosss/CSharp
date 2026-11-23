@@ -277,6 +277,7 @@ class Program
                                 }
                                 catch (ArgumentOutOfRangeException ex)
                                 {
+                                    clinic.Logger.LogWarning($"Помилка введення: {ex.Message}");
                                     Console.WriteLine($"Помилка: {ex.Message}");
                                 }
                             }
@@ -561,6 +562,7 @@ class Program
                     }
                     catch (InvalidOperationException ex)
                     {
+                        clinic.Logger.LogWarning($"Помилка введення: {ex.Message}");
                         Console.WriteLine($"Помилка: {ex.Message}");
                     }
                     break;
@@ -572,6 +574,7 @@ class Program
                     }
                     catch (InvalidOperationException ex)
                     {
+                        clinic.Logger.LogWarning($"Помилка введення: {ex.Message}");
                         Console.WriteLine($"Помилка: {ex.Message}");
                     }
                     break;
