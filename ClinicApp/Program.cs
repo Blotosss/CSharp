@@ -13,6 +13,12 @@ class Program
     static void Main(string[] args)
     {
         Clinic clinic = new Clinic("Медична клініка");
+        if (clinic.Session.Exists())
+        {
+            Console.Write("Знайдено збережену сесію. Завантажити? (y/n): ");
+            if ((Console.ReadLine() ?? "").Trim().Equals("y", StringComparison.OrdinalIgnoreCase))
+                Console.WriteLine($"Завантажено {clinic.Session.Load(clinic)} пацієнтів.");
+        }
 
         while (true)
         {
@@ -28,6 +34,7 @@ class Program
             Console.WriteLine("║ 7. Звіт           — загальна статистика        ║");
             Console.WriteLine("║ 8. Аналітика      — рейтинги та звіти          ║");
             Console.WriteLine("║ 9. Плани лікування — рефлексія, атрибути       ║");
+            Console.WriteLine("║ 10. Файли                                      ║");
             Console.WriteLine("║ 0. Вийти                                       ║");
             Console.WriteLine("╚════════════════════════════════════════════════╝");
             Console.Write("Оберіть розділ: ");
@@ -67,12 +74,58 @@ class Program
                 case 9:
                     TreatmentPlansMenu(clinic);
                     break;
+                case 10:
+                    FilesMenu(clinic);
+                    break;
                 case 0:
+                    Console.Write("Зберегти сесію? (y/n): ");
+                    if ((Console.ReadLine() ?? "").Trim().Equals("y", StringComparison.OrdinalIgnoreCase))
+                    {
+                        clinic.Session.Save(clinic);
+                        Console.WriteLine("Сесію збережено.");
+                    }
                     Console.WriteLine("Вихід з програми...");
                     return;
                 default:
                     Console.WriteLine("Невідомий розділ. Спробуйте знову.");
                     break;
+            }
+        }
+    }
+
+    private static void FilesMenu(Clinic clinic)
+    {
+        while (true)
+        {
+            Console.WriteLine("\n— Файли —");
+            Console.WriteLine("1. Останні рядки лога");
+            Console.WriteLine("2. Очистити лог");
+            Console.WriteLine("3. Експортувати всі звіти");
+            Console.WriteLine("4. Імпорт пацієнтів з CSV");
+            Console.WriteLine("0. Назад");
+            Console.Write("Оберіть: ");
+            if (!int.TryParse(Console.ReadLine(), out int choice)) continue;
+            switch (choice)
+            {
+                case 1:
+                    Console.Write("Кількість рядків: ");
+                    if (int.TryParse(Console.ReadLine(), out int n) && n > 0)
+                    {
+                        string[] lines = clinic.Logger.GetLastLines(n);
+                        for (int i = 0; i < lines.Length; i++) Console.WriteLine(lines[i]);
+                    }
+                    break;
+                case 2:
+                    clinic.Logger.Clear(); Console.WriteLine("Лог очищено."); break;
+                case 3:
+                    string[] paths = clinic.Exporter.ExportAll();
+                    for (int i = 0; i < paths.Length; i++) Console.WriteLine(paths[i]);
+                    break;
+                case 4:
+                    Console.Write("Шлях до CSV: ");
+                    ImportResult result = CsvImporter.ImportPatients(clinic, Console.ReadLine() ?? "");
+                    result.Print(); break;
+                case 0: return;
             }
         }
     }
@@ -106,7 +159,9 @@ class Program
                         {
                             Console.Write("Телефон: ");
                             string ph = Console.ReadLine() ?? "";
-                            clinic.Patients.Add(new Patient(fn, ln, dob, (BloodType)bloodTypeInt, ph));
+                            Patient patient = new Patient(fn, ln, dob, (BloodType)bloodTypeInt, ph);
+                            clinic.Patients.Add(patient);
+                            clinic.Logger.LogInfo($"Додано пацієнта #{patient.Id}: {patient.FullName}");
                         }
                     }
                     else
@@ -157,7 +212,9 @@ class Program
                     Console.WriteLine("Спеціальність (0 - General, 1 - Surgeon, 2 - Dentist, 3 - Therapist, 4 - Neurologist): ");
                     if (int.TryParse(Console.ReadLine(), out int spec))
                     {
-                        clinic.Doctors.Add(new Doctor(fn, ln, (Speciality)spec));
+                        Doctor doctor = new Doctor(fn, ln, (Speciality)spec);
+                        clinic.Doctors.Add(doctor);
+                        clinic.Logger.LogInfo($"Додано лікаря #{doctor.Id}: {doctor.FullName}");
                     }
                     break;
                 case 2:
@@ -220,6 +277,7 @@ class Program
                                 }
                                 catch (ArgumentOutOfRangeException ex)
                                 {
+                                    clinic.Logger.LogWarning($"Помилка введення: {ex.Message}");
                                     Console.WriteLine($"Помилка: {ex.Message}");
                                 }
                             }
@@ -275,17 +333,17 @@ class Program
                                 {
                                     Console.Write("Причина терміновості: ");
                                     string note = Console.ReadLine() ?? "";
-                                    clinic.Appointments.BookUrgent(pId, dId, DateTime.Now.AddHours(1), note);
+                                    if (clinic.Appointments.BookUrgent(pId, dId, DateTime.Now.AddHours(1), note)) clinic.Logger.LogInfo($"Створено терміновий запис: пацієнт #{pId} → лікар #{dId}");
                                 }
                                 else if (tChoice == 3)
                                 {
                                     Console.Write("Тема консультації: ");
                                     string topic = Console.ReadLine() ?? "";
-                                    clinic.Appointments.BookSpecialist(pId, dId, DateTime.Now.AddHours(1), topic);
+                                    if (clinic.Appointments.BookSpecialist(pId, dId, DateTime.Now.AddHours(1), topic)) clinic.Logger.LogInfo($"Створено запис до спеціаліста: пацієнт #{pId} → лікар #{dId}");
                                 }
                                 else
                                 {
-                                    clinic.Appointments.Book(pId, dId, DateTime.Now.AddHours(1));
+                                    if (clinic.Appointments.Book(pId, dId, DateTime.Now.AddHours(1))) clinic.Logger.LogInfo($"Створено запис: пацієнт #{pId} → лікар #{dId}");
                                 }
                             }
                         }
@@ -297,14 +355,14 @@ class Program
                     {
                         Console.Write("Причина скасування: ");
                         string reason = Console.ReadLine() ?? "";
-                        clinic.Appointments.Cancel(aId, reason);
+                        if (clinic.Appointments.Cancel(aId, reason)) clinic.Logger.LogInfo($"Запис #{aId} скасовано.");
                     }
                     break;
                 case 3:
                     Console.Write("ID запису: ");
                     if (int.TryParse(Console.ReadLine(), out int compId))
                     {
-                        clinic.Appointments.Complete(compId);
+                        if (clinic.Appointments.Complete(compId)) clinic.Logger.LogInfo($"Запис #{compId} завершено.");
                     }
                     break;
                 case 4:
@@ -430,6 +488,7 @@ class Program
                     if (int.TryParse(Console.ReadLine(), out int appId))
                     {
                         bool success = clinic.Billing.PayAppointment(appId);
+                        if (success) clinic.Logger.LogInfo($"Запис #{appId} оплачено.");
                         if (success)
                         {
                             Console.WriteLine($"Запис [{appId}] оплачено.");
@@ -503,6 +562,7 @@ class Program
                     }
                     catch (InvalidOperationException ex)
                     {
+                        clinic.Logger.LogWarning($"Помилка введення: {ex.Message}");
                         Console.WriteLine($"Помилка: {ex.Message}");
                     }
                     break;
@@ -514,6 +574,7 @@ class Program
                     }
                     catch (InvalidOperationException ex)
                     {
+                        clinic.Logger.LogWarning($"Помилка введення: {ex.Message}");
                         Console.WriteLine($"Помилка: {ex.Message}");
                     }
                     break;

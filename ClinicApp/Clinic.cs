@@ -14,6 +14,9 @@ public class Clinic
     public WaitingQueue<Patient> WaitingRoom { get; }
     public AnalyticsManager Analytics { get; }
     public TreatmentPlanManager TreatmentPlans { get; }
+    public Utils.ClinicLogger Logger { get; }
+    public Utils.ClinicExporter Exporter { get; }
+    public Utils.SessionManager Session { get; }
 
     public Clinic(string name)
     {
@@ -26,5 +29,8 @@ public class Clinic
         WaitingRoom = new WaitingQueue<Patient>();
         Analytics = new AnalyticsManager(Appointments, Doctors, Patients);
         TreatmentPlans = new TreatmentPlanManager();
+        Logger = new Utils.ClinicLogger();
+        Exporter = new Utils.ClinicExporter(this);
+        Session = new Utils.SessionManager();
     }
 }
