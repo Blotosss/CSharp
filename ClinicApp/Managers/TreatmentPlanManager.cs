@@ -1,4 +1,5 @@
 using ClinicApp.Models;
+using ClinicApp.Events;
 using ClinicApp.Enums;
 using ClinicApp.Utils;
 
@@ -6,6 +7,7 @@ namespace ClinicApp.Managers;
 
 public class TreatmentPlanManager
 {
+    public event EventHandler<TreatmentPlanEventArgs>? PlanCompleted;
     private readonly List<TreatmentPlan> _plans = new List<TreatmentPlan>();
 
     public bool Add(TreatmentPlan plan)
@@ -57,6 +59,14 @@ public class TreatmentPlanManager
             }
         }
         return matching.ToArray();
+    }
+
+    public bool Complete(int planId)
+    {
+        TreatmentPlan? plan = GetById(planId);
+        if (plan == null || !plan.Complete()) return false;
+        PlanCompleted?.Invoke(this, new TreatmentPlanEventArgs(plan.Id, plan.PatientId, plan.Diagnosis));
+        return true;
     }
 
     public TreatmentPlan[] GetAll()

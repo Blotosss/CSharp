@@ -18,6 +18,9 @@ public class AppointmentManager
     public int Count => _count;
 
     public event EventHandler<AppointmentEventArgs>? AppointmentBooked;
+    public event EventHandler<AppointmentEventArgs>? UrgentAppointmentBooked;
+    public event EventHandler<AppointmentEventArgs>? AppointmentCancelled;
+    public event EventHandler<AppointmentEventArgs>? AppointmentCompleted;
 
     public Appointment? this[int index]
     {
@@ -61,7 +64,9 @@ public class AppointmentManager
         Doctor d = _doctors.FindById(doctorId)!;
         Console.WriteLine($"Запис [{appointment.Id}] створено: {p.FullName} -> {d.FullName} о {appointment.ScheduledAt:dd.MM.yyyy HH:mm}");
         string notes = appointment is UrgentAppointment urgent ? urgent.UrgencyNote : appointment is SpecialistAppointment specialist ? specialist.ConsultationTopic : "";
-        AppointmentBooked?.Invoke(this, new AppointmentEventArgs(appointment.Id, patientId, doctorId, appointment.ScheduledAt, notes));
+        AppointmentEventArgs eventArgs = new AppointmentEventArgs(appointment.Id, patientId, doctorId, appointment.ScheduledAt, notes);
+        AppointmentBooked?.Invoke(this, eventArgs);
+        if (appointment is UrgentAppointment) UrgentAppointmentBooked?.Invoke(this, eventArgs);
         return true;
     }
 
@@ -81,6 +86,12 @@ public class AppointmentManager
     {
         Appointment appointment = new SpecialistAppointment(patientId, doctorId, scheduledAt, topic, durationMinutes);
         return AddAppointment(appointment, patientId, doctorId);
+    }
+
+    private AppointmentEventArgs ToEventArgs(Appointment app)
+    {
+        string notes = app is UrgentAppointment urgent ? urgent.UrgencyNote : app is SpecialistAppointment specialist ? specialist.ConsultationTopic : "";
+        return new AppointmentEventArgs(app.Id, app.PatientId, app.DoctorId, app.ScheduledAt, notes);
     }
 
     private Appointment? FindById(int id)
@@ -104,6 +115,7 @@ public class AppointmentManager
         if (success)
         {
             Console.WriteLine($"Запис [{id}] скасовано.");
+            AppointmentCancelled?.Invoke(this, ToEventArgs(app));
         }
         return success;
     }
@@ -116,12 +128,13 @@ public class AppointmentManager
         if (app.Status == AppointmentStatus.Scheduled)
         {
             app.Complete();
+            AppointmentCompleted?.Invoke(this, ToEventArgs(app));
             return true;
         }
         return false;
     }
 
-    public static int CancelAll(ICancellable[] items, string reason = "")
+    public int CancelAll(ICancellable[] items, string reason = "")
     {
         int count = 0;
         foreach (var item in items)
@@ -129,6 +142,7 @@ public class AppointmentManager
             if (item.Cancel(reason))
             {
                 count++;
+                if (item is Appointment app) AppointmentCancelled?.Invoke(this, ToEventArgs(app));
             }
         }
         return count;

@@ -17,6 +17,8 @@ public class Clinic
     public Utils.ClinicLogger Logger { get; }
     public Utils.ClinicExporter Exporter { get; }
     public Utils.SessionManager Session { get; }
+    public Utils.PatientPassportWriter Passport { get; }
+    public Utils.SessionEventTracker Tracker { get; }
 
     public Clinic(string name)
     {
@@ -32,5 +34,31 @@ public class Clinic
         Logger = new Utils.ClinicLogger();
         Exporter = new Utils.ClinicExporter(this);
         Session = new Utils.SessionManager();
+        Passport = new Utils.PatientPassportWriter(this);
+        Tracker = new Utils.SessionEventTracker(this);
+        SubscribeEvents();
+    }
+
+    private void SubscribeEvents()
+    {
+        Patients.PatientAdded += Logger.OnPatientAdded;
+        Appointments.AppointmentBooked += Logger.OnAppointmentBooked;
+        Appointments.UrgentAppointmentBooked += Logger.OnUrgentAppointmentBooked;
+        Appointments.AppointmentCancelled += Logger.OnAppointmentCancelled;
+        Appointments.AppointmentCompleted += Logger.OnAppointmentCompleted;
+        Billing.PaymentReceived += Logger.OnPaymentReceived;
+        TreatmentPlans.PlanCompleted += Logger.OnPlanCompleted;
+
+        Patients.PatientAdded += Passport.OnPatientAdded;
+        Appointments.AppointmentCompleted += Passport.OnAppointmentCompleted;
+        TreatmentPlans.PlanCompleted += Passport.OnPlanCompleted;
+
+        Patients.PatientAdded += Tracker.OnPatientAdded;
+        Appointments.AppointmentBooked += Tracker.OnAppointmentBooked;
+        Appointments.UrgentAppointmentBooked += Tracker.OnUrgentAppointmentBooked;
+        Appointments.AppointmentCancelled += Tracker.OnAppointmentCancelled;
+        Appointments.AppointmentCompleted += Tracker.OnAppointmentCompleted;
+        Billing.PaymentReceived += Tracker.OnPaymentReceived;
+        TreatmentPlans.PlanCompleted += Tracker.OnPlanCompleted;
     }
 }

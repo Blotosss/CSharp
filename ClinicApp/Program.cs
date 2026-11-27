@@ -84,6 +84,8 @@ class Program
                     FilesMenu(clinic);
                     break;
                 case 0:
+                    clinic.Tracker.PrintSummary();
+                    clinic.Tracker.SaveSummary();
                     Console.Write("Зберегти сесію? (y/n): ");
                     if ((Console.ReadLine() ?? "").Trim().Equals("y", StringComparison.OrdinalIgnoreCase))
                     {
@@ -167,7 +169,7 @@ class Program
                             string ph = Console.ReadLine() ?? "";
                             Patient patient = new Patient(fn, ln, dob, (BloodType)bloodTypeInt, ph);
                             clinic.Patients.Add(patient);
-                            clinic.Logger.LogInfo($"Додано пацієнта #{patient.Id}: {patient.FullName}");
+                            
                         }
                     }
                     else
@@ -339,17 +341,17 @@ class Program
                                 {
                                     Console.Write("Причина терміновості: ");
                                     string note = Console.ReadLine() ?? "";
-                                    if (clinic.Appointments.BookUrgent(pId, dId, DateTime.Now.AddHours(1), note)) clinic.Logger.LogInfo($"Створено терміновий запис: пацієнт #{pId} → лікар #{dId}");
+                                    clinic.Appointments.BookUrgent(pId, dId, DateTime.Now.AddHours(1), note);
                                 }
                                 else if (tChoice == 3)
                                 {
                                     Console.Write("Тема консультації: ");
                                     string topic = Console.ReadLine() ?? "";
-                                    if (clinic.Appointments.BookSpecialist(pId, dId, DateTime.Now.AddHours(1), topic)) clinic.Logger.LogInfo($"Створено запис до спеціаліста: пацієнт #{pId} → лікар #{dId}");
+                                    clinic.Appointments.BookSpecialist(pId, dId, DateTime.Now.AddHours(1), topic);
                                 }
                                 else
                                 {
-                                    if (clinic.Appointments.Book(pId, dId, DateTime.Now.AddHours(1))) clinic.Logger.LogInfo($"Створено запис: пацієнт #{pId} → лікар #{dId}");
+                                    clinic.Appointments.Book(pId, dId, DateTime.Now.AddHours(1));
                                 }
                             }
                         }
@@ -361,14 +363,14 @@ class Program
                     {
                         Console.Write("Причина скасування: ");
                         string reason = Console.ReadLine() ?? "";
-                        if (clinic.Appointments.Cancel(aId, reason)) clinic.Logger.LogInfo($"Запис #{aId} скасовано.");
+                        clinic.Appointments.Cancel(aId, reason);
                     }
                     break;
                 case 3:
                     Console.Write("ID запису: ");
                     if (int.TryParse(Console.ReadLine(), out int compId))
                     {
-                        if (clinic.Appointments.Complete(compId)) clinic.Logger.LogInfo($"Запис #{compId} завершено.");
+                        clinic.Appointments.Complete(compId);
                     }
                     break;
                 case 4:
@@ -398,7 +400,7 @@ class Program
                         Console.Write("Причина (Enter — без причини): ");
                         string reason = Console.ReadLine() ?? "";
                         Appointment[] patAppointments = clinic.Appointments.GetByPatient(cancelPatId);
-                        int cancelledCount = AppointmentManager.CancelAll(patAppointments, reason);
+                        int cancelledCount = clinic.Appointments.CancelAll(patAppointments, reason);
                         Console.WriteLine($"Скасовано записів: {cancelledCount}");
                     }
                     break;
@@ -494,7 +496,7 @@ class Program
                     if (int.TryParse(Console.ReadLine(), out int appId))
                     {
                         bool success = clinic.Billing.PayAppointment(appId);
-                        if (success) clinic.Logger.LogInfo($"Запис #{appId} оплачено.");
+                        
                         if (success)
                         {
                             Console.WriteLine($"Запис [{appId}] оплачено.");
@@ -809,7 +811,7 @@ class Program
                         }
                         else
                         {
-                            if (plan.Complete())
+                            if (clinic.TreatmentPlans.Complete(planId))
                             {
                                 Console.WriteLine("План успішно завершено.");
                             }
@@ -867,3 +869,4 @@ class Program
         }
     }
 }
+
