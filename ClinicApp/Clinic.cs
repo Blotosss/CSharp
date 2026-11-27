@@ -37,6 +37,7 @@ public class Clinic
         Passport = new Utils.PatientPassportWriter(this);
         Tracker = new Utils.SessionEventTracker(this);
         SubscribeEvents();
+
     }
 
     private void SubscribeEvents()
@@ -52,13 +53,6 @@ public class Clinic
         Patients.PatientAdded += Passport.OnPatientAdded;
         Appointments.AppointmentCompleted += Passport.OnAppointmentCompleted;
         TreatmentPlans.PlanCompleted += Passport.OnPlanCompleted;
-
-        Patients.PatientAdded += Tracker.OnPatientAdded;
-        Appointments.AppointmentBooked += Tracker.OnAppointmentBooked;
-        Appointments.UrgentAppointmentBooked += Tracker.OnUrgentAppointmentBooked;
-        Appointments.AppointmentCancelled += Tracker.OnAppointmentCancelled;
-        Appointments.AppointmentCompleted += Tracker.OnAppointmentCompleted;
-        Billing.PaymentReceived += Tracker.OnPaymentReceived;
-        TreatmentPlans.PlanCompleted += Tracker.OnPlanCompleted;
     }
+
 }
