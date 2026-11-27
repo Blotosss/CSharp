@@ -10,9 +10,15 @@ namespace ClinicApp;
 
 class Program
 {
+    private static void OnAppointmentBookedConsole(object? sender, ClinicApp.Events.AppointmentEventArgs e)
+    {
+        Console.WriteLine($"[EVENT] Запис #{e.AppointmentId} створено: пацієнт #{e.PatientId} → лікар #{e.DoctorId}, {e.ScheduledAt:dd.MM.yyyy HH:mm}");
+    }
+
     static void Main(string[] args)
     {
         Clinic clinic = new Clinic("Медична клініка");
+        clinic.Appointments.AppointmentBooked += OnAppointmentBookedConsole;
         if (clinic.Session.Exists())
         {
             Console.Write("Знайдено збережену сесію. Завантажити? (y/n): ");

@@ -1,4 +1,5 @@
 using ClinicApp.Models;
+using ClinicApp.Events;
 using ClinicApp.Enums;
 using ClinicApp.Interfaces;
 using System.Globalization;
@@ -15,6 +16,8 @@ public class AppointmentManager
     private readonly DoctorManager _doctors;
 
     public int Count => _count;
+
+    public event EventHandler<AppointmentEventArgs>? AppointmentBooked;
 
     public Appointment? this[int index]
     {
@@ -57,6 +60,8 @@ public class AppointmentManager
         Patient p = _patients.FindById(patientId)!;
         Doctor d = _doctors.FindById(doctorId)!;
         Console.WriteLine($"Запис [{appointment.Id}] створено: {p.FullName} -> {d.FullName} о {appointment.ScheduledAt:dd.MM.yyyy HH:mm}");
+        string notes = appointment is UrgentAppointment urgent ? urgent.UrgencyNote : appointment is SpecialistAppointment specialist ? specialist.ConsultationTopic : "";
+        AppointmentBooked?.Invoke(this, new AppointmentEventArgs(appointment.Id, patientId, doctorId, appointment.ScheduledAt, notes));
         return true;
     }
 
